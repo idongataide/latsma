@@ -8,6 +8,8 @@ import MainRouter from "./mainRouter";
 import BPDListing from "@/pages/dashboard/screens/setup/BPD/BPDListing";
 import BookingScreen from "@/pages/dashboard/screens/home/bookingScreen";
 import PaymentLayout from "@/pages/payment/PaymentLayout";
+import DeleteAccount from "@/pages/dashboard/screens/account/DeleteAccount";
+import AccountSupport from "@/pages/dashboard/screens/account/Support";
 
 
 
@@ -242,8 +244,9 @@ export const routes = createBrowserRouter([
         children: [
           { index: true, element: <Profile /> }, // Default route for /account
           { path: 'change-password', element: <ChangePassword /> },
+          { path: 'delete-account', element: <DeleteAccount /> },
+          { path: 'support', element: <AccountSupport /> },
           { path: 'passcode', element: <Passcode /> },
-          // Add routes for Notifications and FAQs when components are created
         ],
       },
       {

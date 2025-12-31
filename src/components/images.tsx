@@ -14,6 +14,8 @@ const Images = {
     profile: "/images/profile.png",
     map: "/images/lagos.png",
     password: "/images/password-banner.png",
+    deletebg: "/images/delete.png",
+    support: "/images/support.png",
     paymentLogo: "/images/payment-icon.png",
 
     icon: {

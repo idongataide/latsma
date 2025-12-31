@@ -34,7 +34,7 @@ const ChangePassword: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 mx-auto max-w-xl">
       <Toaster />
       <div className='p-5 pt-0'>
         <div className=" items-center">
@@ -48,7 +48,7 @@ const ChangePassword: React.FC = () => {
           
         </div>
 
-        <div className='mt-10 border-t border-[#E5E9F0] py-7'>
+        <div className='mt-10 border-t border-[#E5E9F0] py-7 '>
           <Form
             form={form}
             layout="vertical"

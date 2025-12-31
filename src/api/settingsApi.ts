@@ -37,6 +37,30 @@ export const getProfile = async () => {
   }
 };
 
+export const contactSupport = async (data: { message: string }) => {
+  try {
+    return await axiosAPIInstance
+      .post(`support/contact`, data)
+      .then((res) => {
+        return res?.data;
+      });
+  } catch (error) {
+    return error;
+  }
+};
+
+export const deleteAccount = async () => {
+  try {
+    return await axiosAPIInstance
+      .delete(`accounts`)
+      .then((res) => {
+        return res?.data;
+      });
+  } catch (error) {
+    return error;
+  }
+};
+
 export const updateProfile = async (data: {
   first_name: string;
   last_name: string;

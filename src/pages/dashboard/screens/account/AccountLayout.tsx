@@ -17,8 +17,8 @@ const AccountLayout: React.FC = () => {
   return (
     <div className="mt-5 px-10">
       <Toaster />
-      <h2 className="text-lg font-semibold mb-4">My Account</h2>
-        <div className='flex bg-white border-[#E5E9F0] border'>        
+      <h2 className="text-lg font-semibold mb-4">Account</h2>
+        <div className='flex bg-white min-h-[80vh]'>        
         <div className="w-64 border-r border-gray-200 p-4">
             <nav className='bg-white'>
             <ul>
