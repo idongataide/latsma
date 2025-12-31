@@ -39,7 +39,6 @@ const SearchPage: React.FC = () => {
 
 
   const [form] = Form.useForm();
-  const { viewToast } = useToast();
 
   useEffect(() => {
     if (vehicleData && vehicleData.driver) {
@@ -51,38 +50,6 @@ const SearchPage: React.FC = () => {
       });
     }
   }, [vehicleData, form]);
-
-  // Handle Paystack payment callback
-  const handlePaymentSuccess = async () => {
-    if (!currentTransactionId) {
-      toast.error('No transaction ID found');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await completePayment(currentTransactionId);
-      
-     if (response?.error || response?.response?.data?.status === 'error') {
-        setLoading(false);
-        toast.error(response?.data?.msg || 'Failed to complete payment');
-      } else {
-        toast.success('Payment completed successfully!');
-        if (typeof mutate === 'function') mutate();
-        form.resetFields();
-        setPlateNumber('');
-        setSearchQuery('');
-        setCurrentTransactionId(null);
-      }
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to complete payment';
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-      paymentInitiated.current = false;
-    }
-  };
-
 
   const handleProceedToPay = async () => {
   if (!vehicleData || paymentInitiated.current) {
