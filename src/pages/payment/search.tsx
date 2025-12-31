@@ -18,7 +18,6 @@ const SearchPage: React.FC = () => {
 
   console.log(currentTransactionId,'currentTransactionId')
   
-  // The hook will fetch whenever searchQuery changes
   const { data: searchResult, isLoading, mutate } = useSearch(searchQuery);
   const [loading, setLoading] = useState(false);
 
@@ -90,7 +89,6 @@ const SearchPage: React.FC = () => {
     if (response?.data?.authorization_url && window.PaystackPop) {
       paymentInitiated.current = true;
       
-      // Create callback that captures the transactionId in closure
       const onPaymentSuccess = async (txId: string) => {
         try {
           setLoading(true);
