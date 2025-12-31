@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button, Form, Input } from 'antd';
 import { useSearch } from '@/hooks/useAdmin';
 import { startPayment, completePayment } from '@/api/transactionsApi';
-import { useToast } from '@/global/ToastProvider';
 import toast from 'react-hot-toast';
 
 declare global {
@@ -16,6 +15,8 @@ const SearchPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
   const paymentInitiated = useRef(false);
+
+  console.log(currentTransactionId,'currentTransactionId')
   
   // The hook will fetch whenever searchQuery changes
   const { data: searchResult, isLoading, mutate } = useSearch(searchQuery);
