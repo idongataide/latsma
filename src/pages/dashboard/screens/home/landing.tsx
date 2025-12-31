@@ -276,8 +276,12 @@ const Landing: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1E293B] to-[#0F172A] relative overflow-hidden">
-      <Toaster position="top-right" />
+    <div 
+      className="min-h-screen relative overflow-hidden"
+      style={{
+        background: `#1D2939 url('/images/map-bg.png') center/cover no-repeat`
+      }}
+>      <Toaster position="top-right" />
       
       {/* Background Map Pattern */}
       <div className="absolute inset-0 opacity-20">
@@ -310,7 +314,7 @@ const Landing: React.FC = () => {
             {!showCurrentLocation ? (
               <>
                 {/* Destination Input - First Step */}
-                <div className="mb-8">                  
+                <div className="mb-5">                  
                   <AutoComplete
                     options={destinationSuggestions.map(addr => ({ value: addr }))}
                     onSelect={handleDestinationSelect}
@@ -322,10 +326,7 @@ const Landing: React.FC = () => {
                     size="large"
                     style={{ height: '45px' }}
                     notFoundContent={loadingDestination ? 'Searching...' : null}
-                  />
-                  <p className="text-gray-400 text-xs mt-1">
-                    Enter any address. Coordinates will be fetched if available.
-                  </p>
+                  />                  
                 </div>
                 
                 {/* Proceed Button - First Step */}
@@ -335,7 +336,7 @@ const Landing: React.FC = () => {
                     onClick={handleProceed}
                     loading={loadingDestination}
                     disabled={!destinationSearch.trim()}
-                    className="w-full h-[50px] rounded-lg bg-[#FF6C2D] text-white font-medium text-lg hover:bg-[#E55B1F] transition border-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-[50px] rounded-sm! bg-[#FF6C2D] text-white font-medium text-lg hover:bg-[#E55B1F] transition border-0 disabled:opacity-50 disabled:cursor-not-allowed"
                     size="large"
                   >
                     {loadingDestination ? 'Checking address...' : 'Proceed'}
@@ -400,7 +401,7 @@ const Landing: React.FC = () => {
                   onClick={handleProceed}
                   loading={loadingCurrent}
                   disabled={!currentLocationSearch.trim()}
-                  className="w-full h-[50px]! rounded-lg bg-[#FF6C2D] text-white! font-medium text-lg hover:bg-[#E55B1F] transition border-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-[50px]! rounded-sm! bg-[#FF6C2D] text-white! font-medium text-lg hover:bg-[#E55B1F] transition border-0 disabled:opacity-50 disabled:cursor-not-allowed"
                   size="large"
                 >
                   {loadingCurrent ? 'Checking address...' : 'Find Towing Van'}

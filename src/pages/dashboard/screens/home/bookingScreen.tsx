@@ -231,9 +231,7 @@ const BookingScreen: React.FC = () => {
   };
 
   const handleSuccessModalClose = () => {
-    setIsSuccessModalOpen(false);
-    // Optional: Navigate to another page after success
-    // navigate('/dashboard');
+    setIsSuccessModalOpen(false); 
   };
 
   return (

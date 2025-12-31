@@ -3,7 +3,6 @@ import { FaCopy } from 'react-icons/fa';
 import Images from '@/components/images';
 import QRCode from 'react-qr-code';
 
-
 interface InvoiceSidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -13,30 +12,34 @@ interface InvoiceSidebarProps {
 const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ isOpen, onClose, booking }) => {
   if (!isOpen) return null;
 
-  const invoiceData = booking ? {
-    bookingId: booking.booking_ref || booking.bookingId || 'N/A',
-    officer: booking.user_data?.first_name + ' ' + booking.user_data?.last_name || 'N/A',
-    vehicleDetails: booking.vehicle_model || 'N/A',
-    numberPlate: booking.plate_number || 'N/A',
-    driverName: booking.driver?.first_name ? `${booking.driver.first_name} ${booking.driver.last_name || ''}` : booking.driver || 'N/A',
-    driverEmail: booking.user_data?.email || booking.driver?.email || 'N/A',
-    amount: booking.est_fare ? `₦${booking.est_fare?.toLocaleString()}` : 'N/A',
-    paymentLink: booking.payment_link || 'bitly/payresq.com',
-  } : {
-    bookingId: 'NOV335008770',
-    officer: 'Derin Abitayo',
-    vehicleDetails: 'Lexus RX 350, metallic, SUV',
-    numberPlate: 'LSD 300 QA',
-    driverName: 'Yemi Chuka',
-    driverEmail: 'Yemi Chuka',
-    amount: '₦52,500',
-    paymentLink: 'bitly/payresq.com',
-  };
+  const invoiceData = booking
+    ? {
+        bookingId: booking.booking_ref || booking.bookingId || 'N/A',
+        officer:
+          booking.user_data?.first_name && booking.user_data?.last_name
+            ? `${booking.user_data.first_name} ${booking.user_data.last_name}`
+            : 'N/A',
+        vehicleDetails: booking.vehicle_model || 'N/A',
+        numberPlate: booking.plate_number || 'N/A',
+        driverName: booking.driver?.first_name
+          ? `${booking.driver.first_name} ${booking.driver.last_name || ''}`
+          : booking.driver || 'N/A',
+        driverEmail: booking.user_data?.email || booking.driver?.email || 'N/A',
+        amount: booking.est_fare ? `₦${booking.est_fare.toLocaleString()}` : 'N/A',
+      }
+    : {
+        bookingId: 'NOV335008770',
+        officer: 'Derin Abitayo',
+        vehicleDetails: 'Lexus RX 350, metallic, SUV',
+        numberPlate: 'LSD 300 QA',
+        driverName: 'Yemi Chuka',
+        driverEmail: 'Yemi Chuka',
+        amount: '₦52,500',
+      };
 
+  
   const plate = encodeURIComponent(invoiceData.numberPlate || '');
-  const base = invoiceData.paymentLink || '';
-  const separator = base.includes('?') ? '&' : '?';
-  const paymentUrl = base ? `${base}${separator}plate=${plate}` : `${window.location.origin}/pay?plate=${plate}`;
+  const paymentUrl = `${window.location.origin}/payment/search?plate=${plate}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(paymentUrl);
@@ -64,7 +67,6 @@ const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ isOpen, onClose, bookin
 
         {/* Body */}
         <div className="overflow-y-auto flex flex-col h-[calc(100vh-160px)] slide-in scrollbar-hide hover:scrollbar-show px-7 py-4">
-          
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <img src={Images.logodark} alt="ResQ Logo" className="h-6 mt-3" />
@@ -74,16 +76,12 @@ const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ isOpen, onClose, bookin
           <div className="flex justify-center mb-6">
             <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center">
               <div className="text-center">
-                {invoiceData && (
-                  <>
-                    <a href={paymentUrl} target="_blank" rel="noopener noreferrer">
-                      <div className="bg-white rounded mx-auto mb-1 p-2 inline-block">
-                        <QRCode value={paymentUrl} size={140} />
-                      </div>
-                    </a>
-                    <p className="text-xs text-[#667085]">Scan to pay</p>
-                  </>
-                )}
+                <a href={paymentUrl} target="_blank" rel="noopener noreferrer">
+                  <div className="bg-white rounded mx-auto mb-1 p-2 inline-block">
+                    <QRCode value={paymentUrl} size={140} />
+                  </div>
+                </a>
+                <p className="text-xs text-[#667085]">Scan to pay</p>
               </div>
             </div>
           </div>
@@ -96,7 +94,7 @@ const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ isOpen, onClose, bookin
           {/* Payment Link */}
           <div className="mb-6">
             <div className="flex items-center border border-[#FF6C2D] rounded-lg p-3 bg-[#FFF3ED]">
-              <p className="flex-1 text-sm text-[#344054]">{paymentUrl}</p>
+              <p className="flex-1 text-sm text-[#344054] break-all">{paymentUrl}</p>
               <button
                 onClick={handleCopyLink}
                 className="ml-2 text-[#FF6C2D] hover:text-[#E55B1F] transition-colors"
@@ -110,12 +108,16 @@ const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ isOpen, onClose, bookin
           <div className="space-y-4 mb-6">
             <div className="flex justify-between">
               <span className="text-sm text-[#667085]">Booking ID:</span>
-              <span className="text-sm font-medium text-[#344054]">{invoiceData.bookingId}</span>
+              <span className="text-sm font-medium text-[#344054]">
+                {invoiceData.bookingId}
+              </span>
             </div>
 
             <div className="flex justify-between">
               <span className="text-sm text-[#667085]">Officer:</span>
-              <span className="text-sm font-medium text-[#344054]">{invoiceData.officer}</span>
+              <span className="text-sm font-medium text-[#344054]">
+                {invoiceData.officer}
+              </span>
             </div>
 
             <div className="flex justify-between">
@@ -127,17 +129,23 @@ const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ isOpen, onClose, bookin
 
             <div className="flex justify-between">
               <span className="text-sm text-[#667085]">Number Plate:</span>
-              <span className="text-sm font-medium text-[#344054]">{invoiceData.numberPlate}</span>
+              <span className="text-sm font-medium text-[#344054]">
+                {invoiceData.numberPlate}
+              </span>
             </div>
 
             <div className="flex justify-between">
               <span className="text-sm text-[#667085]">Driver's Name:</span>
-              <span className="text-sm font-medium text-[#344054]">{invoiceData.driverName}</span>
+              <span className="text-sm font-medium text-[#344054]">
+                {invoiceData.driverName}
+              </span>
             </div>
 
             <div className="flex justify-between">
               <span className="text-sm text-[#667085]">Driver's Email:</span>
-              <span className="text-sm font-medium text-[#344054]">{invoiceData.driverEmail}</span>
+              <span className="text-sm font-medium text-[#344054]">
+                {invoiceData.driverEmail}
+              </span>
             </div>
           </div>
 
@@ -148,7 +156,6 @@ const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ isOpen, onClose, bookin
           >
             Close
           </button>
-
         </div>
       </div>
     </div>

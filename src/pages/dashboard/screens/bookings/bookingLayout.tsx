@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaArrowRight } from 'react-icons/fa';
 import ClosedBookingSidebar from './closedBookingSidebar';
 import { useAllBookings } from '@/hooks/useAdmin';
+import LoadingScreen from '../../common/LoadingScreen';
 
 interface Coordinates {
   longitude: number;
@@ -61,7 +62,7 @@ const BookingLayout: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'active' | 'closed'>('active');
   const [selectedClosedBooking, setSelectedClosedBooking] = useState<Booking | null>(null);
-  const { data: allBookings = [] } = useAllBookings();
+  const { data: allBookings = [], isLoading } = useAllBookings();
 
   const activeBookings = allBookings.filter((booking: Booking) => 
     booking.ride_status >= 0 && booking.ride_status <= 2
@@ -85,6 +86,9 @@ const BookingLayout: React.FC = () => {
     setSelectedClosedBooking(null);
   };
 
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
   return (
     <div className="w-full p-6">
       <div className="mb-6">
@@ -95,7 +99,7 @@ const BookingLayout: React.FC = () => {
             <div className="flex space-x-2 ">
               <button
                 onClick={() => setActiveTab('active')}
-                className={`px-4 py-3 w-[50%] font-normal text-sm relative -mb-[1px] ${
+                className={`px-4 py-3 w-[50%] font-normal cursor-pointer text-sm relative -mb-[1px] ${
                   activeTab === 'active'
                     ? 'text-[#E86229] rounded border border-[#FFD1BE] bg-[#FFF0EA]! font-medium!'
                     : 'text-[#475467] hover:text-[#475467]'
@@ -105,7 +109,7 @@ const BookingLayout: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTab('closed')}
-                className={`px-4 py-3 w-[50%] font-normal text-sm relative -mb-[1px] ${
+                className={`px-4 py-3 w-[50%] font-normal  cursor-pointer text-sm relative -mb-[1px] ${
                   activeTab === 'closed'
                     ? 'text-[#E86229] rounded border border-[#FFD1BE] bg-[#FFF0EA]! font-medium!'
                     : 'text-[#475467] hover:text-[#475467]'

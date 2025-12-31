@@ -16,6 +16,17 @@ const SearchPage: React.FC = () => {
   const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null);
   const paymentInitiated = useRef(false);
 
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const plateFromUrl = params.get('plate');
+
+  if (plateFromUrl) {
+    const decodedPlate = decodeURIComponent(plateFromUrl);
+    setPlateNumber(decodedPlate);
+    setSearchQuery(decodedPlate); 
+  }
+}, []);
+
   console.log(currentTransactionId,'currentTransactionId')
   
   const { data: searchResult, isLoading, mutate } = useSearch(searchQuery);
@@ -34,9 +45,9 @@ const SearchPage: React.FC = () => {
     }
   };
 
-  const hasResults = Array.isArray(searchResult) && searchResult.length > 0;
-  const vehicleData = hasResults ? searchResult[0] : null;
-
+  const hasSearched = searchQuery !== '';
+  const hasResults = searchResult?.data && Array.isArray(searchResult.data) && searchResult.data.length > 0;
+  const vehicleData = hasResults ? searchResult.data[0] : null;
 
   const [form] = Form.useForm();
 
@@ -52,109 +63,106 @@ const SearchPage: React.FC = () => {
   }, [vehicleData, form]);
 
   const handleProceedToPay = async () => {
-  if (!vehicleData || paymentInitiated.current) {
-    return;
-  }
-
-  try {
-    const values = await form.validateFields();
-    
-    const payload = {
-      towing_id: vehicleData.towing_id,
-      first_name: values.driver_first_name,
-      last_name: values.driver_last_name,
-      phone_number: values.driver_phone,
-      email: values.driver_email,
-    };
-    
-    setLoading(true);
-    const response = await startPayment(payload as any);
-    
-    if (response?.error || response?.response?.data?.status === 'error') {
-      setLoading(false);
-      toast.error(response?.data?.msg || 'Failed to initiate payment');
+    if (!vehicleData || paymentInitiated.current) {
       return;
     }
 
-    const transactionId = response?.data?.transaction_id;
-    const reference = response?.data?.reference;
-    
-    if (!transactionId || !reference) {
-      setLoading(false);
-      toast.error('Missing payment details');
-      return;
-    }
-
-    // Initialize Paystack payment
-    if (response?.data?.authorization_url && window.PaystackPop) {
-      paymentInitiated.current = true;
+    try {
+      const values = await form.validateFields();
       
-      const onPaymentSuccess = async (txId: string) => {
-        try {
-          setLoading(true);
-          const response = await completePayment(txId);
-          
-          if (response?.error || response?.response?.data?.status === 'error') {
-            setLoading(false);
-            toast.error(response?.data?.msg || 'Failed to complete payment');
-          }else {
-            toast.success('Payment completed successfully!');
-            if (typeof mutate === 'function') mutate();
-            form.resetFields();
-            setPlateNumber('');
-            setSearchQuery('');
-          }
-        } catch (err: any) {
-          const msg = err?.response?.data?.message || err?.message || 'Failed to complete payment';
-          toast.error(msg);
-        } finally {
-          setLoading(false);
-          paymentInitiated.current = false;
-        }
-      };
-
-      const handler = window.PaystackPop.setup({
-        key: response.data.paystackKey,
+      const payload = {
+        towing_id: vehicleData.towing_id,
+        first_name: values.driver_first_name,
+        last_name: values.driver_last_name,
+        phone_number: values.driver_phone,
         email: values.driver_email,
-        amount: response.data.amount,
-        // ref: reference, // REQUIRED for Paystack
-        callback: function(paystackResponse: any) {
-          if (paystackResponse.status === 'success') {
-            onPaymentSuccess(transactionId);
-          } else {
-            toast.error('Payment was not successful');
+      };
+      
+      setLoading(true);
+      const response = await startPayment(payload as any);
+      
+      if (response?.error || response?.response?.data?.status === 'error') {
+        setLoading(false);
+        toast.error(response?.data?.msg || 'Failed to initiate payment');
+        return;
+      }
+
+      const transactionId = response?.data?.transaction_id;
+      const reference = response?.data?.reference;
+      
+      if (!transactionId || !reference) {
+        setLoading(false);
+        toast.error('Missing payment details');
+        return;
+      }
+
+      // Initialize Paystack payment
+      if (response?.data?.authorization_url && window.PaystackPop) {
+        paymentInitiated.current = true;
+        
+        const onPaymentSuccess = async (txId: string) => {
+          try {
+            setLoading(true);
+            const response = await completePayment(txId);
+            
+            if (response?.error || response?.response?.data?.status === 'error') {
+              setLoading(false);
+              toast.error(response?.data?.msg || 'Failed to complete payment');
+            } else {
+              toast.success('Payment completed successfully!');
+              if (typeof mutate === 'function') mutate();
+              form.resetFields();
+              setPlateNumber('');
+              setSearchQuery('');
+            }
+          } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.message || 'Failed to complete payment';
+            toast.error(msg);
+          } finally {
             setLoading(false);
             paymentInitiated.current = false;
           }
-        },
-        onClose: function() {
-          toast('Payment window closed', { icon: '⚠️' });
-          setLoading(false);
-          paymentInitiated.current = false;
-        }
-      });
+        };
+
+        const handler = window.PaystackPop.setup({
+          key: response.data.paystackKey,
+          email: values.driver_email,
+          amount: response.data.amount,
+          callback: function(paystackResponse: any) {
+            if (paystackResponse.status === 'success') {
+              onPaymentSuccess(transactionId);
+            } else {
+              toast.error('Payment was not successful');
+              setLoading(false);
+              paymentInitiated.current = false;
+            }
+          },
+          onClose: function() {
+            toast('Payment window closed', { icon: '⚠️' });
+            setLoading(false);
+            paymentInitiated.current = false;
+          }
+        });
+        
+        handler.openIframe();
+        setCurrentTransactionId(transactionId);
+      } else {
+        // Fallback redirect
+        window.location.href = response.data.authorization_url;
+      }
       
-      handler.openIframe();
-      setCurrentTransactionId(transactionId);
-    } else {
-      // Fallback redirect
-      window.location.href = response.data.authorization_url;
+      setLoading(false);
+    } catch (err: any) {
+      setLoading(false);
+      paymentInitiated.current = false;
+      
+      if (err?.errorFields) return;
+      const msg = err?.response?.data?.message || err?.message || 'Failed to complete payment';
+      toast.error(msg);
     }
-    
-    setLoading(false);
-  } catch (err: any) {
-    setLoading(false);
-    paymentInitiated.current = false;
-    
-    if (err?.errorFields) return;
-    const msg = err?.response?.data?.message || err?.message || 'Failed to complete payment';
-    toast.error(msg);
-  }
-};
-// Remove the separate handlePaymentSuccess function since it's now in the closure
-  // Add Paystack script dynamically
+  };
+
   useEffect(() => {
-    // Check if Paystack script is already loaded
     if (document.getElementById('paystack-script')) {
       return;
     }
@@ -175,7 +183,6 @@ const SearchPage: React.FC = () => {
     
     document.body.appendChild(script);
 
-    // Cleanup
     return () => {
       const existingScript = document.getElementById('paystack-script');
       if (existingScript) {
@@ -206,8 +213,15 @@ const SearchPage: React.FC = () => {
           </Button>
         </div>
 
-        {/* No Results State */}
-        {!searchResult && (
+        {/* Show loading state */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center mt-8">
+            <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-[#475467]">Searching...</p>
+          </div>
+        )}
+
+        {hasSearched && !isLoading && !hasResults && (
           <div className="flex flex-col items-center justify-center mt-8">
             <div className="w-64 h-64 mb-6 flex items-center justify-center">
               <img 
@@ -220,13 +234,16 @@ const SearchPage: React.FC = () => {
               Nothing to find here!
             </p>
             <p className="text-[#475467] text-center">
-              Enter your details to find your vehicle
+              No vehicle found with plate number: <span className="font-semibold">"{searchQuery}"</span>
+            </p>
+            <p className="text-[#475467] text-center mt-2">
+              Please check the plate number and try again
             </p>
           </div>
         )}
 
         {/* Results Section */}
-        {vehicleData && (
+        {hasSearched && !isLoading && hasResults && vehicleData && (
           <div className="mt-3">
             <div className='bg-[#F9FAFB] border-l-3 border-[#D0D5DD] px-3 py-3 rounded mb-5'>
               <span className='text-[#344054]'>Vehicle Details</span>
@@ -254,25 +271,26 @@ const SearchPage: React.FC = () => {
               />
 
               {/* Attachments/URLs */}
-                {vehicleData.url && vehicleData.url.length > 0 && (
+              {vehicleData.url && vehicleData.url.length > 0 && (
                 <div className="my-3 p-2 border-[#F2F4F7] rounded border">
-                    <h4 className="font-semibold text-gray-700 mb-2">Attachments</h4>
-                    <div className="flex flex-wrap gap-2">
+                  <h4 className="font-semibold text-gray-700 mb-2">Attachments</h4>
+                  <div className="flex flex-wrap gap-2">
                     {vehicleData.url.map((urlItem: any, i: number) => (
-                        <span 
+                      <span 
                         key={i} 
                         className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm"
-                        >
+                      >
                         {typeof urlItem === 'string' ? urlItem : 'Attachment'}
-                        </span>
+                      </span>
                     ))}
-                    </div>
+                  </div>
                 </div>
-                )}
-                
-                <div className='bg-[#F9FAFB] border-l-3 border-[#D0D5DD] px-3 py-3 rounded mt-4! mb-5'>
-                    <span className='text-[#344054]'>Driver's Details</span>
-                </div> 
+              )}
+              
+              <div className='bg-[#F9FAFB] border-l-3 border-[#D0D5DD] px-3 py-3 rounded mt-4! mb-5'>
+                <span className='text-[#344054]'>Driver's Details</span>
+              </div> 
+              
               <Form form={form} layout="vertical" className="space-y-3">
                 <Form.Item
                   label={<span className="text-[#475467] text-[16px] font-medium">Driver First Name</span>}
@@ -317,12 +335,30 @@ const SearchPage: React.FC = () => {
             </div>  
           </div>
         )}
+
+        {/* Initial state - before any search */}
+        {!hasSearched && !isLoading && (
+          <div className="flex flex-col items-center justify-center mt-8">
+            <div className="w-64 h-64 mb-6 flex items-center justify-center opacity-50">
+              <img 
+                src="/images/empty.png" 
+                alt="Enter plate number"
+                className="max-w-full max-h-full object-contain"                
+              />
+            </div>
+            <p className="text-[#475467] text-lg font-medium mb-2">
+              Ready to search
+            </p>
+            <p className="text-[#475467] text-center">
+              Enter your vehicle plate number to find your vehicle
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// Helper component for detail rows
 const DetailRow: React.FC<{ label: string; value: any }> = ({ label, value }) => (
   <div className="flex justify-between items-center">
     <span className="text-[#475467] text-[16px] font-medium">{label}</span>
