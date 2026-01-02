@@ -8,7 +8,6 @@ import {
   IoIosPerson,
   IoIosLogOut 
 } from "react-icons/io";
-import { FaRegQuestionCircle } from "react-icons/fa";
 import { useOnboardingStore } from "../global/store";
 import Images from "@/components/images";
 import { useGetNotification } from "@/hooks/useAdmin";
