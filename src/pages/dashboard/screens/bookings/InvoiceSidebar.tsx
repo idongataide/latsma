@@ -2,6 +2,7 @@ import React from 'react';
 import { FaCopy } from 'react-icons/fa';
 import Images from '@/components/images';
 import QRCode from 'react-qr-code';
+import toast from 'react-hot-toast';
 
 interface InvoiceSidebarProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ isOpen, onClose, bookin
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(paymentUrl);
+    toast.success('Payment link copied to clipboard');
   };
 
   return (
@@ -97,7 +99,7 @@ const InvoiceSidebar: React.FC<InvoiceSidebarProps> = ({ isOpen, onClose, bookin
               <p className="flex-1 text-sm text-[#344054] break-all">{paymentUrl}</p>
               <button
                 onClick={handleCopyLink}
-                className="ml-2 text-[#FF6C2D] hover:text-[#E55B1F] transition-colors"
+                className="ml-2 text-[#FF6C2D] hover:text-[#E55B1F] cursor-pointer transition-colors"
               >
                 <FaCopy />
               </button>

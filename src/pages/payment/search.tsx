@@ -46,8 +46,9 @@ const SearchPage: React.FC = () => {
   };
 
   const hasSearched = searchQuery !== '';
-  const hasResults = searchResult?.data && Array.isArray(searchResult.data) && searchResult.data.length > 0;
-  const vehicleData = hasResults ? searchResult.data[0] : null;
+  const hasResults = searchResult && Array.isArray(searchResult) && searchResult.length > 0;
+  const vehicleData = hasResults ? searchResult[0] : null;
+  
 
   const [form] = Form.useForm();
 
@@ -96,8 +97,7 @@ const SearchPage: React.FC = () => {
         return;
       }
 
-      // Initialize Paystack payment
-      if (response?.data?.authorization_url && window.PaystackPop) {
+      if (window.PaystackPop) {
         paymentInitiated.current = true;
         
         const onPaymentSuccess = async (txId: string) => {
@@ -124,11 +124,15 @@ const SearchPage: React.FC = () => {
           }
         };
 
+        
+
         const handler = window.PaystackPop.setup({
           key: response.data.paystackKey,
           email: values.driver_email,
-          amount: response.data.amount,
+          amount: response.data.amount * 100,
+          ref: response.data.reference, 
           callback: function(paystackResponse: any) {
+            console.log(paystackResponse,'paystackResponsepaystackResponse')
             if (paystackResponse.status === 'success') {
               onPaymentSuccess(transactionId);
             } else {
@@ -138,7 +142,7 @@ const SearchPage: React.FC = () => {
             }
           },
           onClose: function() {
-            toast('Payment window closed', { icon: '⚠️' });
+            toast.error('Payment window closed');
             setLoading(false);
             paymentInitiated.current = false;
           }
@@ -146,9 +150,6 @@ const SearchPage: React.FC = () => {
         
         handler.openIframe();
         setCurrentTransactionId(transactionId);
-      } else {
-        // Fallback redirect
-        window.location.href = response.data.authorization_url;
       }
       
       setLoading(false);
@@ -162,35 +163,7 @@ const SearchPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (document.getElementById('paystack-script')) {
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = 'paystack-script';
-    script.src = 'https://js.paystack.co/v1/inline.js';
-    script.async = true;
-    
-    script.onload = () => {
-      console.log('Paystack script loaded');
-    };
-    
-    script.onerror = () => {
-      console.error('Failed to load Paystack script');
-      toast.error('Failed to load payment system');
-    };
-    
-    document.body.appendChild(script);
-
-    return () => {
-      const existingScript = document.getElementById('paystack-script');
-      if (existingScript) {
-        document.body.removeChild(existingScript);
-      }
-    };
-  }, []);
-
+ 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">      
       <div className="w-full max-w-md">
