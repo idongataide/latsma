@@ -52,9 +52,9 @@ const [showConfirmModal, setShowConfirmModal] = useState(false);
   };
 
   return (
-    <div className="p-4 mx-auto max-w-xl">
+    <div className="md:p-4 p-0 mx-auto max-w-xl">
       <Toaster />
-      <div className='p-5 pt-0'>
+      <div className='md:p-4 p-0 pt-0'>
         <div className="items-center">
           <div className="mb-5">
             <img src={Images.deletebg} alt="Booking Banner" className="w-full h-full object-cover" />    

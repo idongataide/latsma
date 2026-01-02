@@ -17,7 +17,6 @@ const ChangePassword: React.FC = () => {
         new_password: values.newPassword
       });
 
-      console.log(response);
       if (response.status === 'ok') {
         toast.success('Password updated successfully');
         form.resetFields();
@@ -34,9 +33,9 @@ const ChangePassword: React.FC = () => {
   };
 
   return (
-    <div className="p-4 mx-auto max-w-xl">
+    <div className="md:p-4 p-0 mx-auto max-w-xl">
       <Toaster />
-      <div className='p-5 pt-0'>
+      <div className='md:p-4 p-0 pt-0'>
         <div className=" items-center">
           <div className="mb-5">
             <img src={Images.password} alt="Booking Banner" className="w-full h-full object-cover" />    

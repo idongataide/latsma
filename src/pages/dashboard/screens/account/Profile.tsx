@@ -56,7 +56,7 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="md:p-4 p-0">
       <div className='w-full h-[124px] bg-[#FFF0EA] rounded-md'></div>
       
       <div className="flex w-[80%] mx-auto items-center mb-6 mt-[-40px]">
