@@ -1,6 +1,14 @@
 import React, { useState } from "react";
-import { Outlet, NavLink, Link, useLocation } from "react-router-dom";
-import { IoIosNotificationsOutline, IoIosArrowForward, IoIosHome, IoIosCalendar, IoIosPerson } from "react-icons/io";
+import { Outlet, NavLink, Link, useLocation, useNavigate } from "react-router-dom";
+import { 
+  IoIosNotificationsOutline, 
+  IoIosArrowForward, 
+  IoIosHome, 
+  IoIosCalendar, 
+  IoIosPerson,
+  IoIosLogOut 
+} from "react-icons/io";
+import { FaRegQuestionCircle } from "react-icons/fa";
 import { useOnboardingStore } from "../global/store";
 import Images from "@/components/images";
 import { useGetNotification } from "@/hooks/useAdmin";
@@ -11,9 +19,23 @@ const DashboardLayout: React.FC = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const datas = useOnboardingStore();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   const toggleNotifications = () => {
     setIsNotificationsOpen(!isNotificationsOpen);
+  };
+
+  const handleLogout = () => {
+      useOnboardingStore.persist.clearStorage(); 
+      localStorage.clear(); 
+      sessionStorage.clear(); 
+      useOnboardingStore.setState({ 
+        token: null, 
+        isAuthorized: false, 
+        firstName: "", 
+        lastName: "" 
+      });
+    navigate("/login");
   };
 
   const navData = [
@@ -102,6 +124,16 @@ const DashboardLayout: React.FC = () => {
               <IoIosArrowForward className="text-[16px] text-gray-500" />
             </Link>
             
+            {/* Desktop Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="hidden md:flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:text-[#E86229] transition-colors cursor-pointer"
+              title="Logout"
+            >
+              <IoIosLogOut className="text-[18px]" />
+              <span className="hidden lg:inline">Logout</span>
+            </button>
+            
             {/* Mobile Profile Icon */}
             <Link
               to="/account"
@@ -147,6 +179,18 @@ const DashboardLayout: React.FC = () => {
               </span>
             </NavLink>
           ))}
+          
+          {/* Mobile Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="flex flex-col items-center justify-center text-gray-500 hover:text-[#E86229] transition-colors cursor-pointer"
+            title="Logout"
+          >
+            <IoIosLogOut className="text-2xl" />
+            <span className="text-xs mt-1 font-medium">
+              Logout
+            </span>
+          </button>
         </div>
       </div>
 

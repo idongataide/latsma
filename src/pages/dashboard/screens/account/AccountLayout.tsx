@@ -26,7 +26,7 @@ const AccountLayout: React.FC = () => {
                   <li key={link.path} className="">
                     <Link
                       to={link.path}
-                      className={`inline-block md:block py-2 md:py-3 px-3 md:px-3 text-sm font-medium rounded-md whitespace-nowrap ${isActive ? 'bg-[#FFF0EA] text-[#E86229] md:border-r-4 md:border-[#FF8957] border-b-4 border-[#FF8957]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                      className={`inline-block md:block py-2 md:py-3 px-3 md:px-3 text-sm font-medium rounded-md whitespace-nowrap ${isActive ? 'bg-[#FFF0EA] text-[#E86229] md:border-r-4 md:border-[#FF8957] border-[#FF8957]' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
                       
                     >
                       {link.name}
