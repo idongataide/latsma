@@ -41,7 +41,7 @@ const Landing: React.FC = () => {
 
     try {
       const response = await fetch(
-        `/maps/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_MAPS_API_KEY}`
+        `/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_MAPS_API_KEY}`
       );
       
       if (!response.ok) {
