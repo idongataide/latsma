@@ -76,7 +76,7 @@ const BookingDetails: React.FC = () => {
 
   
   const timelineEvents = useMemo<TimelineEvent[]>(() => {
-    const etaMinutes = bookingData?.est_time
+    const etaMinutes = bookingData?.pickup_time
       ? Math.ceil(bookingData.est_time / 60)
       : null;
 

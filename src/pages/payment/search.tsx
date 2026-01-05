@@ -99,7 +99,6 @@ const SearchPage: React.FC = () => {
 
       if (window.PaystackPop) {
         paymentInitiated.current = true;
-        
         const onPaymentSuccess = async (txId: string) => {
           try {
             setLoading(true);
@@ -132,7 +131,6 @@ const SearchPage: React.FC = () => {
           amount: response.data.amount * 100,
           ref: response.data.reference, 
           callback: function(paystackResponse: any) {
-            console.log(paystackResponse,'paystackResponsepaystackResponse')
             if (paystackResponse.status === 'success') {
               onPaymentSuccess(transactionId);
             } else {
@@ -152,7 +150,6 @@ const SearchPage: React.FC = () => {
         setCurrentTransactionId(transactionId);
       }
       
-      setLoading(false);
     } catch (err: any) {
       setLoading(false);
       paymentInitiated.current = false;
