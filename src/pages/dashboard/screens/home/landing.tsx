@@ -86,7 +86,7 @@ const Landing: React.FC = () => {
 
     try {
       const response = await fetch(
-        `/maps/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_API_KEY}`
+        `/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_API_KEY}`
       );
       
       if (!response.ok) {
