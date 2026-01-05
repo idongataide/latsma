@@ -22,7 +22,7 @@ interface TimelineAction {
 interface TimelineEvent {
   id: string;
   title: string;
-  description: string;
+  description: React.ReactNode;
   timestamp: string;
   status: string;
   actions?: TimelineAction[];
@@ -37,7 +37,6 @@ const BookingDetails: React.FC = () => {
   const [confirming, setConfirming] = useState(false);
   const [completing, setCompleting] = useState(false);
 
-  // Handler for confirming arrival — calls API and refetches booking details
   const handleConfirmArrival = async () => {
     if (!bookingData) return;
     const confirmed = window.confirm('Are you sure you want to confirm arrival for this booking?');
@@ -46,7 +45,6 @@ const BookingDetails: React.FC = () => {
     try {
       setConfirming(true);
       await updateArrival({ towing_id: bookingData.towing_id });
-      // Re-fetch booking details to reflect updated status
       if (mutate) await mutate();
       toast.success('Arrival confirmed');
     } catch (err) {
@@ -57,7 +55,6 @@ const BookingDetails: React.FC = () => {
     }
   };
 
-  // Handler for confirming towing completion
   const handleConfirmTowing = async () => {
     if (!bookingData) return;
     const confirmed = window.confirm('Are you sure you want to mark this towing as completed?');
@@ -79,6 +76,9 @@ const BookingDetails: React.FC = () => {
 
   
   const timelineEvents = useMemo<TimelineEvent[]>(() => {
+    const etaMinutes = bookingData?.est_time
+      ? Math.ceil(bookingData.est_time / 60)
+      : null;
 
     const events: TimelineEvent[] = [
       {
@@ -94,11 +94,20 @@ const BookingDetails: React.FC = () => {
         description: 'Your booking is pending approval',
         timestamp: bookingData?.createdAt || 'N/A',
         status: bookingData ? (bookingData.ride_status === 0 ? 'pending' : '') : 'pending'
-      },
+      }, 
       {
         id: '3',
         title: 'Booking approved',
-        description: 'Your towing van is on the way, estimated to arrive soon',
+        description: (
+          <>
+            Your towing van is on the way, estimated to arrive in{' '}
+            {etaMinutes && (
+              <span className='font-medium text-[#FF6C2D]'>
+                {etaMinutes} minutes
+              </span>
+            )}
+          </>
+        ),
         timestamp: bookingData?.updatedAt || 'N/A',
         status: bookingData ? (bookingData.ride_status >= 1 ? 'approved' : '') : '',
         actions: [{
@@ -176,7 +185,7 @@ const BookingDetails: React.FC = () => {
   });
 
   return (
-    <div className="w-full p-6">
+    <div className="w-full p-3 md:p-6 ">
       <div className="mb-6">
         <div 
           className="flex items-center mb-5 cursor-pointer"
@@ -207,7 +216,7 @@ const BookingDetails: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="bg-white p-6">
+            <div className="bg-white  py-2 md:p-6 ">
               <h2 className="text-xl font-semibold text-[#344054] mb-6">Booking Timeline</h2>
               
               <div className="space-y-6">
