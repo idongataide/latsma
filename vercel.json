@@ -9,8 +9,8 @@
       "destination": "https://resq-wallet.onrender.com/wallet/:path*"
     },
     {
-      "source": "/map/:path*",
-      "destination": "https://maps.googleapis.com/map/:path*"
+      "source": "/maps/:path*",
+      "destination": "https://maps.googleapis.com/maps/:path*"
     },
     {
       "source": "/(.*)",
