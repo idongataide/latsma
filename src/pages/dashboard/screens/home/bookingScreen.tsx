@@ -258,13 +258,13 @@ const BookingScreen: React.FC = () => {
               {currentLocation && (
                 <div className="flex items-center">
                   <div className="w-4 h-4 rounded-full bg-[#667085] mr-3"></div>
-                  <p className="text-sm font-medium text-[#344054]">{currentLocation.address}</p>
+                  <p className="text-sm font-medium text-[#344054] capitalize">{currentLocation.address}</p>
                 </div>
               )}
               {destinationLocation && (
                 <div className="flex items-center">
                   <div className="w-4 h-4 rounded-full border-2 border-[#667085] mr-3"></div>
-                  <p className="text-sm font-medium text-[#667085]">{destinationLocation.address}</p>
+                  <p className="text-sm font-medium text-[#667085] capitalize">{destinationLocation.address}</p>
                 </div>
               )}
             </div>

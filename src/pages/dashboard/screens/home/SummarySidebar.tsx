@@ -58,13 +58,13 @@ const SummarySidebar: React.FC<SummarySidebarProps> = ({
               {bookingData?.currentLocation && (
                 <div className="flex items-center">
                   <div className="w-4 h-4 rounded-full bg-[#667085] mr-3"></div>
-                  <p className="text-sm font-medium text-[#344054]">{bookingData?.currentLocation.address}</p>
+                  <p className="text-sm font-medium text-[#344054] capitalize">{bookingData?.currentLocation.address}</p>
                 </div>
               )}
               {bookingData?.destinationLocation && (
                 <div className="flex items-center">
                   <div className="w-4 h-4 rounded-full border-2 border-[#667085] mr-3"></div>
-                  <p className="text-sm font-medium text-[#667085]">{bookingData?.destinationLocation.address}</p>
+                  <p className="text-sm font-medium text-[#667085] capitalize">{bookingData?.destinationLocation.address}</p>
                 </div>
               )}
             </div>
