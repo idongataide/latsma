@@ -1,7 +1,7 @@
 import { getBookings, BookingDetails, getBookingsCount, getDailyPayout, getDashboardOperators, getRemittedRevenue, getRevenues } from "@/api/bookingsApi";
 import { getCustomerCount, getCustomers, getCustomersDetails } from "@/api/customersApi";
 import { getOperators, getOperatorData, getDrivers, getDriversByOperatorId, getAssetsbyCordinate, getAssets, getOperatorCount, getAssetsByOperatorId } from "@/api/operatorsApi";
-import { getFees, getFeesCategory, getProfile, getServices, getFeesCount, getServicesCount, getStakeholdersCount, getBisProcessList, getNotifications, getStakeholders, getAreas } from "@/api/settingsApi";
+import { getFees, getFeesCategory, getProfile, getServices, getFeesCount, getServicesCount, getStakeholdersCount, getBisProcessList, getNotifications, getStakeholders, getAreas, getCommandCenters } from "@/api/settingsApi";
 import { getTeams, getTeamsCount } from "@/api/teamsApi";
 import { getTransactionCount, TransactionList } from "@/api/transactionsApi";
 import { getBanksList } from "@/api/banks";
@@ -651,6 +651,25 @@ export const useSearch = (q:string) => {
     `/outsiders/${q}`,
     () => {
       return getOutsider(q).then((res) => {
+        return res?.data;
+      });
+    },
+    {
+      revalidateOnFocus: false,
+    },
+  );
+
+  return { data, isLoading, mutate };
+};
+
+
+
+
+export const useCommandCenters = () => {
+  const { data, isLoading, mutate } = useSWR(
+    `/account/commands/`,
+    () => {
+      return getCommandCenters().then((res) => {
         return res?.data;
       });
     },

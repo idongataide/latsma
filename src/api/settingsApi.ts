@@ -388,3 +388,15 @@ export const confirmDestinationArrival = async (towing_id: string) => {
   const response = await axiosAPIInstance.post(`/towings/complete-request/${towing_id}`);
   return response.data;
 };
+
+export const getCommandCenters = async () => {
+  try {
+    return await axiosAPIInstance
+      .get(`/accounts/commands`)
+      .then((res) => {
+        return res?.data;
+      });
+  } catch (error) {
+    return error;
+  }
+};

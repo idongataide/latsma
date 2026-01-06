@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AutoComplete, Button } from 'antd';
+import { AutoComplete, Button, Select, Spin } from 'antd';
 import { FaCrosshairs, FaTimes } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
+import { useCommandCenters } from '@/hooks/useAdmin';
+
+const { Option } = Select;
 
 interface LocationData {
   address: string;
@@ -13,7 +16,16 @@ interface LocationData {
   };
 }
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyC6OO39gLvWbZpMzBiLSs1pGNehjJbr2Vg';
+interface CommandCenterItem {
+  _id: string;
+  name: string;
+  address: string;
+  location: {
+    type: string;
+    coordinates: [number, number]; // [longitude, latitude]
+  };
+  command_id: string;
+}
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
@@ -21,68 +33,45 @@ const Landing: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [destinationSearch, setDestinationSearch] = useState<string>('');
   const [currentLocationSearch, setCurrentLocationSearch] = useState<string>('');
-  const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
   const [currentLocationSuggestions, setCurrentLocationSuggestions] = useState<string[]>([]);
-  const [loadingDestination, setLoadingDestination] = useState(false);
   const [loadingCurrent, setLoadingCurrent] = useState(false);
   const [gettingCurrentLocation, setGettingCurrentLocation] = useState(false);
   const [showCurrentLocation, setShowCurrentLocation] = useState(false);
+  const GOOGLE_MAPS_API_KEY = 'AIzaSyC6OO39gLvWbZpMzBiLSs1pGNehjJbr2Vg';
 
-  // Fetch autocomplete suggestions (optional, will work if API is available)
-  const fetchAutocompleteSuggestions = async (input: string, isDestination: boolean) => {
-    if (!input || input.length < 3) {
-      if (isDestination) {
-        setDestinationSuggestions([]);
-      } else {
-        setCurrentLocationSuggestions([]);
-      }
-      return;
-    }
+  // Fetch command centers
+  const { data: commandCenters, isLoading: isLoadingCommandCenters } = useCommandCenters();
 
-    try {
-      const response = await fetch(
-        `/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_MAPS_API_KEY}`
-      );
+
+  // Handle destination selection from command centers
+  const handleDestinationSelect = (commandId: string) => {
+    const selectedCommand = commandCenters?.find(
+      (center: CommandCenterItem) => center.command_id === commandId || center._id === commandId
+    );
+    
+    if (selectedCommand) {
+      setDestinationSearch(selectedCommand.name);
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // Convert coordinates from [longitude, latitude] to LocationData format
+      const coordinates = selectedCommand.location?.coordinates || [];
+      const locationData: LocationData = {
+        address: selectedCommand.name,
+        fullAddress: selectedCommand.address,
+        coordinates: coordinates.length >= 2 ? {
+          latitude: coordinates[1], // latitude is at index 1
+          longitude: coordinates[0] // longitude is at index 0
+        } : undefined
+      };
       
-      const data = await response.json();
-      
-      if (data.status === 'OK' && data.predictions) {
-        const suggestions = data.predictions.map((prediction: any) => prediction.description);
-        if (isDestination) {
-          setDestinationSuggestions(suggestions);
-        } else {
-          setCurrentLocationSuggestions(suggestions);
-        }
-      } else {
-        if (isDestination) {
-          setDestinationSuggestions([]);
-        } else {
-          setCurrentLocationSuggestions([]);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching suggestions:', error);
-      if (isDestination) {
-        setDestinationSuggestions([]);
-      } else {
-        setCurrentLocationSuggestions([]);
-      }
+      setDestinationLocation(locationData);
+      toast.success(`${selectedCommand.name} selected`);
     }
   };
 
-  // Try to fetch coordinates, but proceed with manual address if API fails
-  const tryFetchCoordinates = async (address: string, isDestination: boolean) => {
+  const tryFetchCoordinates = async (address: string) => {
     if (!address.trim()) return null;
 
-    if (isDestination) {
-      setLoadingDestination(true);
-    } else {
-      setLoadingCurrent(true);
-    }
+    setLoadingCurrent(true);
 
     try {
       const response = await fetch(
@@ -130,11 +119,36 @@ const Landing: React.FC = () => {
       };
       return locationData;
     } finally {
-      if (isDestination) {
-        setLoadingDestination(false);
-      } else {
-        setLoadingCurrent(false);
+      setLoadingCurrent(false);
+    }
+  };
+
+  const fetchAutocompleteSuggestions = async (input: string) => {
+    if (!input || input.length < 3) {
+      setCurrentLocationSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_MAPS_API_KEY}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
+      const data = await response.json();
+      
+      if (data.status === 'OK' && data.predictions) {
+        const suggestions = data.predictions.map((prediction: any) => prediction.description);
+        setCurrentLocationSuggestions(suggestions);
+      } else {
+        setCurrentLocationSuggestions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      setCurrentLocationSuggestions([]);
     }
   };
 
@@ -149,7 +163,6 @@ const Landing: React.FC = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          // Create location data with coordinates from geolocation
           const locationData: LocationData = {
             address: 'Current Location',
             fullAddress: `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`,
@@ -179,28 +192,10 @@ const Landing: React.FC = () => {
     setCurrentLocationSuggestions([]);
   };
 
-  const handleDestinationSelect = async (value: string) => {
-    setDestinationSearch(value);
-    setDestinationSuggestions([]);
-    const locationData = await tryFetchCoordinates(value, true);
-    if (locationData) {
-      setDestinationLocation(locationData);
-    }
-  };
-
-  const handleDestinationSearch = async (value: string) => {
-    setDestinationSearch(value);
-    if (value.length >= 3) {
-      await fetchAutocompleteSuggestions(value, true);
-    } else {
-      setDestinationSuggestions([]);
-    }
-  };
-
   const handleCurrentLocationSelect = async (value: string) => {
     setCurrentLocationSearch(value);
     setCurrentLocationSuggestions([]);
-    const locationData = await tryFetchCoordinates(value, false);
+    const locationData = await tryFetchCoordinates(value);
     if (locationData) {
       setCurrentLocation(locationData);
     }
@@ -209,7 +204,7 @@ const Landing: React.FC = () => {
   const handleCurrentLocationSearch = async (value: string) => {
     setCurrentLocationSearch(value);
     if (value.length >= 3) {
-      await fetchAutocompleteSuggestions(value, false);
+      await fetchAutocompleteSuggestions(value);
     } else {
       setCurrentLocationSuggestions([]);
     }
@@ -217,32 +212,45 @@ const Landing: React.FC = () => {
 
   const handleProceed = async () => {
     if (!showCurrentLocation) {
-      // First step: Validate destination
       if (!destinationSearch.trim()) {
-        toast.error('Please enter a destination location');
+        toast.error('Please select a destination zonal office');
         return;
       }
 
-      // If destination location is not already fetched, create it from the manual input
       if (!destinationLocation) {
-        const locationData: LocationData = {
-          address: destinationSearch,
-          fullAddress: destinationSearch,
-          coordinates: undefined
-        };
-        setDestinationLocation(locationData);
+        // Find the selected command center
+        const selectedCommand = commandCenters?.find(
+          (center: CommandCenterItem) => center.name === destinationSearch
+        );
+        
+        if (selectedCommand) {
+          const coordinates = selectedCommand.location?.coordinates || [];
+          const locationData: LocationData = {
+            address: selectedCommand.name,
+            fullAddress: selectedCommand.address,
+            coordinates: coordinates.length >= 2 ? {
+              latitude: coordinates[1],
+              longitude: coordinates[0]
+            } : undefined
+          };
+          setDestinationLocation(locationData);
+        } else {
+          const locationData: LocationData = {
+            address: destinationSearch,
+            fullAddress: destinationSearch,
+            coordinates: undefined
+          };
+          setDestinationLocation(locationData);
+        }
       }
 
-      // Proceed to next step
       setShowCurrentLocation(true);
     } else {
-      // Second step: Validate current location
       if (!currentLocationSearch.trim()) {
         toast.error('Please enter your current location');
         return;
       }
 
-      // If current location is not already fetched, create it from the manual input
       if (!currentLocation) {
         const locationData: LocationData = {
           address: currentLocationSearch,
@@ -252,7 +260,6 @@ const Landing: React.FC = () => {
         setCurrentLocation(locationData);
       }
 
-      // Make sure we have location objects (they should be set above)
       const finalDestinationLocation = destinationLocation || {
         address: destinationSearch,
         fullAddress: destinationSearch,
@@ -281,12 +288,8 @@ const Landing: React.FC = () => {
       style={{
         background: `#1D2939 url('/images/map-bg.png') center/cover no-repeat`
       }}
->      <Toaster position="top-right" />
-      
-      {/* Background Map Pattern */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGMwIDIuMjA5LTEuNzkxIDQtNCA0cy00LTEuNzkxLTQtNCAxLjc5MS00IDQtNCA0IDEuNzkxIDQgNHptMTAtMTBjMCAyLjIwOS0xLjc5MSA0LTQgNHMtNC0xLjc5MS00LTQgMS43OTEtNCA0LTQgNCAxLjc5MSA0IDR6IiBzdHJva2U9IiNGRkYyIiBzdHJva2Utd2lkdGg9IjEuNSIvPjwvZz48L3N2Zz4=')] opacity-30"></div>
-      </div>
+    >
+
 
       {/* Location indicators */}
       <div className="absolute bottom-50 left-40 flex items-center justify-center">
@@ -313,20 +316,47 @@ const Landing: React.FC = () => {
           <div className="w-full max-w-[350px] mx-auto">
             {!showCurrentLocation ? (
               <>
-                {/* Destination Input - First Step */}
-                <div className="mb-5">                  
-                  <AutoComplete
-                    options={destinationSuggestions.map(addr => ({ value: addr }))}
-                    onSelect={handleDestinationSelect}
-                    onSearch={handleDestinationSearch}
-                    value={destinationSearch}
-                    onChange={(value) => setDestinationSearch(value)}
-                    className="w-full"
-                    placeholder="Enter Destination Address"
-                    size="large"
-                    style={{ height: '45px' }}
-                    notFoundContent={loadingDestination ? 'Searching...' : null}
-                  />                  
+                {/* Destination Input - First Step (Command Centers Dropdown) */}
+                <div className="mb-5">
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Select Destination Zonal Office
+                  </label>
+                  {isLoadingCommandCenters ? (
+                    <div className="flex items-center justify-center p-4 bg-white rounded">
+                      <Spin size="small" />
+                      <span className="ml-2 text-gray-600">Loading zonal offices...</span>
+                    </div>
+                  )  : (
+                    <Select
+                      placeholder="Select a zonal office"
+                      className="w-full h-[45px]! capitalize!"
+                      size="large"
+                      onChange={handleDestinationSelect}
+                      value={destinationSearch || undefined}
+                      showSearch
+                      filterOption={(input, option) =>
+                        typeof option?.children === 'string' && (option.children as string).toLowerCase().includes(input.toLowerCase())
+                      }
+                      loading={isLoadingCommandCenters}
+                    >
+                      {commandCenters?.map((center: CommandCenterItem) => (
+                        <Option 
+                          key={center.command_id || center._id} 
+                          value={center.command_id || center._id}
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium capitalize!">{center.name}</span>
+                            <span className="text-xs text-gray-500 truncate capitalize">
+                              {center.address}
+                            </span>
+                          </div>
+                        </Option>
+                      ))}
+                    </Select>
+                  )}
+                  <p className="text-gray-300 text-xs mt-1">
+                    Choose from available LASTMA zonal offices
+                  </p>
                 </div>
                 
                 {/* Proceed Button - First Step */}
@@ -334,12 +364,11 @@ const Landing: React.FC = () => {
                   <Button
                     type="primary"
                     onClick={handleProceed}
-                    loading={loadingDestination}
                     disabled={!destinationSearch.trim()}
                     className="w-full h-[50px] rounded-sm! bg-[#FF6C2D] text-white font-medium text-lg hover:bg-[#E55B1F] transition border-0 disabled:opacity-50 disabled:cursor-not-allowed"
                     size="large"
                   >
-                    {loadingDestination ? 'Checking address...' : 'Proceed'}
+                    Proceed
                   </Button>
                 )}
               </>
@@ -347,8 +376,17 @@ const Landing: React.FC = () => {
               <>
                 {/* Current Location Input - Second Step */}
                 <div className="mb-8">
-                  <label className="block text-white text-sm font-medium mb-2">
-                    Current Location
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-white text-sm font-medium">
+                      Destination Selected
+                    </label>
+                    <span className="text-[#FF6C2D] text-sm font-medium bg-[#FF6C2D]/10 px-3 py-1 rounded-full">
+                      {destinationSearch}
+                    </span>
+                  </div>
+                  
+                  <label className="block text-white text-sm font-medium mb-2 mt-4">
+                    Your Current Location
                   </label>
                   <div className="relative">
                     <AutoComplete
@@ -395,7 +433,6 @@ const Landing: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Proceed Button - Second Step */}
                 <Button
                   type="primary"
                   onClick={handleProceed}
@@ -407,13 +444,12 @@ const Landing: React.FC = () => {
                   {loadingCurrent ? 'Checking address...' : 'Find Towing Van'}
                 </Button>
 
-                {/* Back button to edit destination */}
                 <Button
                   type="text"
                   onClick={() => setShowCurrentLocation(false)}
-                  className="w-full mt-4 text-[#FF6C2D]! hover:text-[#FF6C2D]"
+                  className="w-full mt-4 text-[#FF6C2D]! hover:text-[#E55B1F]"
                 >
-                  ← Back to edit destination
+                  ← Back to select different zonal office
                 </Button>
               </>
             )}
