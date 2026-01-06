@@ -332,11 +332,7 @@ const BookingScreen: React.FC = () => {
                   label="Number plate"
                   name="numberPlate"
                   rules={[
-                    { required: true, message: 'Please enter number plate' },
-                    { 
-                      pattern: /^[A-Za-z0-9]{3}-[A-Za-z0-9]+$/,
-                      message: 'Plate number should be in ABC-123 or 0PA-12121A format.'
-                    }
+                    { required: true, message: 'Please enter number plate' },                    
                   ]}
                 >
                   <Input placeholder="Enter details" />
