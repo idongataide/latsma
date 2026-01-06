@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AutoComplete, Button, Select, Spin } from 'antd';
 import { FaCrosshairs, FaTimes } from 'react-icons/fa';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { useCommandCenters } from '@/hooks/useAdmin';
 
 const { Option } = Select;
