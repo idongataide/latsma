@@ -10,7 +10,6 @@ interface VanDetailsProps {
 const VanDetails: React.FC<VanDetailsProps> = ({ isOpen, onClose, booking }) => {
   if (!isOpen) return null;
 
-  // Fallback data if booking is not provided
   const vanData = booking || {
     company: 'Move360',
     numberPlate: 'LSD 490 TB',
@@ -44,7 +43,6 @@ const VanDetails: React.FC<VanDetailsProps> = ({ isOpen, onClose, booking }) => 
         {/* Body */}
         <div className="overflow-y-auto flex flex-col h-[calc(100vh-160px)] slide-in scrollbar-hide hover:scrollbar-show px-7 py-4">
 
-          {/* Van Details */}
           <div className="space-y-4 mb-6">
             <div className="flex justify-between">
               <span className="text-sm text-[#667085]">Booking ref:</span>

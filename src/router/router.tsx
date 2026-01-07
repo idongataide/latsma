@@ -31,7 +31,6 @@ const BookingDetails = lazy(() =>
 );
 
 
-// Account components
 const AccountLayout = lazy(() => import("@/pages/dashboard/screens/account/AccountLayout"));
 const Profile = lazy(() => import("@/pages/dashboard/screens/account/Profile"));
 const ChangePassword = lazy(() => import("@/pages/dashboard/screens/account/ChangePassword"));
@@ -124,8 +123,7 @@ export const routes = createBrowserRouter([
     element: <PaymentLayout />,
     children: [
       {
-        // This renders the banner on /payment
-        index: true, // or path: "" for empty path
+        index: true, 
         element: <PaymentBanner />
       },
       {

@@ -94,7 +94,6 @@ const BookingLayout: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#344054] mb-6">Booking</h1>
 
-        {/* Tabs - Exact styling from image */}
          <div className="bg-white rounded-lg border p-1 overflow-hidden border-[#E5E9F0] mx-auto max-w-xl">
             <div className="flex space-x-2 ">
               <button

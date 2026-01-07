@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
         allowedHosts: [""],
         proxy: {
           '/lastmas': {
-            target: 'https://towing-app-user-api-service.onrender.com/',
+            target: 'https://user-api.resque.ng/',
             changeOrigin: true,
             secure: false,
             rewrite: (path) => path
@@ -36,13 +36,13 @@ export default defineConfig(({ mode }) => {
           }
         },
         '/wallet': {
-          target: 'https://towing-app-booking-service.onrender.com/',
+          target: '⁠https://booking-service.resque.ng',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/wallet/, '/admins')
         },
         '/users': {
-          target: 'https://towing-app-booking-service.onrender.com/',
+          target: '⁠https://booking-service.resque.ng',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/wallet/, '/admins')

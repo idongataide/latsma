@@ -550,7 +550,6 @@ const BookingScreen: React.FC = () => {
         )}
       </div>
 
-      {/* Summary Sidebar */}
       <SummarySidebar
         isOpen={isSummarySidebarOpen}
         onClose={() => setIsSummarySidebarOpen(false)}
@@ -570,7 +569,6 @@ const BookingScreen: React.FC = () => {
         onBookNow={handleBookNow}
       />
 
-      {/* Success Modal */}
       <SuccessModal
         isOpen={isSuccessModalOpen}
         onClose={handleSuccessModalClose}
