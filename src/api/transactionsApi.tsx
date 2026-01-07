@@ -2,12 +2,10 @@ import axios from 'axios';
 import { paymentAPIInstance } from './baseRequest';
 
 
-// Get the token from localStorage at the time of instance creation
 const authTokens = localStorage.getItem("adminToken")
   ? JSON.parse(localStorage.getItem("adminToken")!)
   : null;
 
-// Create a new axios instance for the wallet service
 const walletAPIInstance = axios.create({
   baseURL: import.meta.env.VITE_WALLET_API_BASE_URL,
   headers: {
