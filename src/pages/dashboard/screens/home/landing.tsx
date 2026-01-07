@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AutoComplete, Button, Select, Spin } from 'antd';
-import { FaCrosshairs, FaTimes, FaMapMarkerAlt, FaEdit } from 'react-icons/fa';
+import { FaCrosshairs, FaTimes, FaEdit } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { useCommandCenters } from '@/hooks/useAdmin';
 
@@ -40,12 +40,11 @@ const Landing: React.FC = () => {
   const [gettingCurrentLocation, setGettingCurrentLocation] = useState(false);
   const [showCurrentLocation, setShowCurrentLocation] = useState(false);
   const [showManualDestination, setShowManualDestination] = useState(false);
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyC6OO39gLvWbZpMzBiLSs1pGNehjJbr2Vg';
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   // Fetch command centers
   const { data: commandCenters, isLoading: isLoadingCommandCenters } = useCommandCenters();
 
-  // Handle destination selection from command centers
   const handleDestinationSelect = (commandId: string) => {
     const selectedCommand = commandCenters?.find(
       (center: CommandCenterItem) => center.command_id === commandId || center._id === commandId
@@ -54,7 +53,6 @@ const Landing: React.FC = () => {
     if (selectedCommand) {
       setDestinationSearch(selectedCommand.name);
       
-      // Convert coordinates from [longitude, latitude] to LocationData format
       const coordinates = selectedCommand.location?.coordinates || [];
       const locationData: LocationData = {
         address: selectedCommand.name,
