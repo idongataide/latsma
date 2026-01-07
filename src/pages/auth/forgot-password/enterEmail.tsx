@@ -19,11 +19,9 @@ const EnterEmail = () => {
         setLoading(true);
         try {
             const response = await changePassword({ email: values.email });
-            
-            if (response?.error || response?.status === 'error') {
-                toast.error(response?.message || response?.msg || 'Failed to send OTP. Please try again.');
+            if (response?.error || response?.status === 'error' || response?.response?.data?.status === 'error') {
+                toast.error(response?.response?.data?.msg || response?.msg || 'Failed to send OTP. Please try again.');
             } else {
-                // Store email and otpRequestId in the store
                 setEmail(values.email);
                 let otpRequestId = null;
                 if (response?.data?.otp_request_id) {
