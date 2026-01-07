@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AutoComplete, Button, Select, Spin } from 'antd';
-import { FaCrosshairs, FaTimes } from 'react-icons/fa';
+import { FaCrosshairs, FaTimes, FaMapMarkerAlt, FaEdit } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { useCommandCenters } from '@/hooks/useAdmin';
 
@@ -34,14 +34,16 @@ const Landing: React.FC = () => {
   const [destinationSearch, setDestinationSearch] = useState<string>('');
   const [currentLocationSearch, setCurrentLocationSearch] = useState<string>('');
   const [currentLocationSuggestions, setCurrentLocationSuggestions] = useState<string[]>([]);
+  const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
   const [loadingCurrent, setLoadingCurrent] = useState(false);
+  const [loadingDestination, setLoadingDestination] = useState(false);
   const [gettingCurrentLocation, setGettingCurrentLocation] = useState(false);
   const [showCurrentLocation, setShowCurrentLocation] = useState(false);
+  const [showManualDestination, setShowManualDestination] = useState(false);
   const GOOGLE_MAPS_API_KEY = 'AIzaSyC6OO39gLvWbZpMzBiLSs1pGNehjJbr2Vg';
 
   // Fetch command centers
   const { data: commandCenters, isLoading: isLoadingCommandCenters } = useCommandCenters();
-
 
   // Handle destination selection from command centers
   const handleDestinationSelect = (commandId: string) => {
@@ -68,10 +70,8 @@ const Landing: React.FC = () => {
     }
   };
 
-  const tryFetchCoordinates = async (address: string) => {
+  const tryFetchCoordinates = async (address: string): Promise<LocationData | null> => {
     if (!address.trim()) return null;
-
-    setLoadingCurrent(true);
 
     try {
       const response = await fetch(
@@ -118,8 +118,36 @@ const Landing: React.FC = () => {
         coordinates: undefined
       };
       return locationData;
-    } finally {
-      setLoadingCurrent(false);
+    }
+  };
+
+  // Fetch autocomplete suggestions for destination
+  const fetchDestinationSuggestions = async (input: string) => {
+    if (!input || input.length < 3) {
+      setDestinationSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_MAPS_API_KEY}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.status === 'OK' && data.predictions) {
+        const suggestions = data.predictions.map((prediction: any) => prediction.description);
+        setDestinationSuggestions(suggestions);
+      } else {
+        setDestinationSuggestions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching destination suggestions:', error);
+      setDestinationSuggestions([]);
     }
   };
 
@@ -192,12 +220,42 @@ const Landing: React.FC = () => {
     setCurrentLocationSuggestions([]);
   };
 
+  const clearDestinationLocation = () => {
+    setDestinationLocation(null);
+    setDestinationSearch('');
+    setDestinationSuggestions([]);
+    setShowManualDestination(false);
+  };
+
+  const handleManualDestinationSelect = async (value: string) => {
+    setDestinationSearch(value);
+    setDestinationSuggestions([]);
+    setLoadingDestination(true);
+    const locationData = await tryFetchCoordinates(value);
+    if (locationData) {
+      setDestinationLocation(locationData);
+      toast.success('Destination address set');
+    }
+    setLoadingDestination(false);
+  };
+
   const handleCurrentLocationSelect = async (value: string) => {
     setCurrentLocationSearch(value);
     setCurrentLocationSuggestions([]);
+    setLoadingCurrent(true);
     const locationData = await tryFetchCoordinates(value);
     if (locationData) {
       setCurrentLocation(locationData);
+    }
+    setLoadingCurrent(false);
+  };
+
+  const handleDestinationSearchInput = async (value: string) => {
+    setDestinationSearch(value);
+    if (value.length >= 3) {
+      await fetchDestinationSuggestions(value);
+    } else {
+      setDestinationSuggestions([]);
     }
   };
 
@@ -213,12 +271,22 @@ const Landing: React.FC = () => {
   const handleProceed = async () => {
     if (!showCurrentLocation) {
       if (!destinationSearch.trim()) {
-        toast.error('Please select a destination zonal office');
+        toast.error('Please select or enter a destination');
         return;
       }
 
-      if (!destinationLocation) {
-        // Find the selected command center
+      // If manual destination and location not fetched yet, fetch it now
+      if (showManualDestination && !destinationLocation) {
+        setLoadingDestination(true);
+        const locationData = await tryFetchCoordinates(destinationSearch);
+        if (locationData) {
+          setDestinationLocation(locationData);
+        }
+        setLoadingDestination(false);
+      }
+
+      // If command center selected and location not set, set it
+      if (!showManualDestination && !destinationLocation) {
         const selectedCommand = commandCenters?.find(
           (center: CommandCenterItem) => center.name === destinationSearch
         );
@@ -234,13 +302,6 @@ const Landing: React.FC = () => {
             } : undefined
           };
           setDestinationLocation(locationData);
-        } else {
-          const locationData: LocationData = {
-            address: destinationSearch,
-            fullAddress: destinationSearch,
-            coordinates: undefined
-          };
-          setDestinationLocation(locationData);
         }
       }
 
@@ -252,12 +313,12 @@ const Landing: React.FC = () => {
       }
 
       if (!currentLocation) {
-        const locationData: LocationData = {
-          address: currentLocationSearch,
-          fullAddress: currentLocationSearch,
-          coordinates: undefined
-        };
-        setCurrentLocation(locationData);
+        setLoadingCurrent(true);
+        const locationData = await tryFetchCoordinates(currentLocationSearch);
+        if (locationData) {
+          setCurrentLocation(locationData);
+        }
+        setLoadingCurrent(false);
       }
 
       const finalDestinationLocation = destinationLocation || {
@@ -282,6 +343,20 @@ const Landing: React.FC = () => {
     }
   };
 
+  const toggleManualDestination = () => {
+    setShowManualDestination(true);
+    setDestinationSearch('');
+    setDestinationLocation(null);
+    setDestinationSuggestions([]);
+  };
+
+  const toggleBackToZonalOffices = () => {
+    setShowManualDestination(false);
+    setDestinationSearch('');
+    setDestinationLocation(null);
+    setDestinationSuggestions([]);
+  };
+
   return (
     <div 
       className="min-h-screen relative overflow-hidden"
@@ -289,8 +364,6 @@ const Landing: React.FC = () => {
         background: `#1D2939 url('/images/map-bg.png') center/cover no-repeat`
       }}
     >
-
-
       {/* Location indicators */}
       <div className="absolute bottom-50 left-40 flex items-center justify-center">
         <span className="absolute w-10 h-10 rounded-full bg-[#FF6C2D] opacity-20 animate-beacon"></span>      
@@ -316,46 +389,103 @@ const Landing: React.FC = () => {
           <div className="w-full max-w-[350px] mx-auto">
             {!showCurrentLocation ? (
               <>
-                {/* Destination Input - First Step (Command Centers Dropdown) */}
+                {/* Destination Input - First Step */}
                 <div className="mb-5">
                   <label className="block text-white text-sm font-medium mb-2">
-                    Select Destination Zonal Office
+                    {showManualDestination ? 'Enter Destination Address' : 'Select Destination Zonal Office'}
                   </label>
-                  {isLoadingCommandCenters ? (
-                    <div className="flex items-center justify-center p-4 bg-white rounded">
-                      <Spin size="small" />
-                      <span className="ml-2 text-gray-600">Loading zonal offices...</span>
-                    </div>
-                  )  : (
-                    <Select
-                      placeholder="Select a zonal office"
-                      className="w-full h-[45px]! capitalize!"
-                      size="large"
-                      onChange={handleDestinationSelect}
-                      value={destinationSearch || undefined}
-                      showSearch
-                      filterOption={(input, option) =>
-                        typeof option?.children === 'string' && (option.children as string).toLowerCase().includes(input.toLowerCase())
-                      }
-                      loading={isLoadingCommandCenters}
-                    >
-                      {commandCenters?.map((center: CommandCenterItem) => (
-                        <Option 
-                          key={center.command_id || center._id} 
-                          value={center.command_id || center._id}
+                  
+                  {!showManualDestination ? (
+                    <>
+                      {isLoadingCommandCenters ? (
+                        <div className="flex items-center justify-center p-4 bg-white rounded">
+                          <Spin size="small" />
+                          <span className="ml-2 text-gray-600">Loading zonal offices...</span>
+                        </div>
+                      ) : (
+                        <Select
+                          placeholder="Select a zonal office"
+                          className="w-full h-[45px]! capitalize!"
+                          size="large"
+                          onChange={handleDestinationSelect}
+                          value={destinationSearch || undefined}
+                          showSearch
+                          filterOption={(input, option) =>
+                            typeof option?.children === 'string' && (option.children as string).toLowerCase().includes(input.toLowerCase())
+                          }
+                          loading={isLoadingCommandCenters}
                         >
-                          <div className="flex flex-col">
-                            <span className="font-medium capitalize!">{center.name}</span>
-                            <span className="text-xs text-gray-500 truncate capitalize">
-                              {center.address}
-                            </span>
-                          </div>
-                        </Option>
-                      ))}
-                    </Select>
+                          {commandCenters?.map((center: CommandCenterItem) => (
+                            <Option 
+                              key={center.command_id || center._id} 
+                              value={center.command_id || center._id}
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-medium capitalize!">{center.name}</span>
+                                <span className="text-xs text-gray-500 truncate capitalize">
+                                  {center.address}
+                                </span>
+                              </div>
+                            </Option>
+                          ))}
+                        </Select>
+                      )}
+                      
+                      <div className="mt-3 text-right">
+                        <button
+                          type="button"
+                          onClick={toggleManualDestination}
+                          className="text-[#FF6C2D] hover:text-[#E55B1F] text-sm font-medium flex items-center gap-1 ml-auto"
+                        >
+                          <FaEdit className="text-xs" />
+                          Can't find it? Enter address manually
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="relative mb-2">
+                        <AutoComplete
+                          options={destinationSuggestions.map(addr => ({ value: addr }))}
+                          onSelect={handleManualDestinationSelect}
+                          onSearch={handleDestinationSearchInput}
+                          value={destinationSearch}
+                          onChange={(value) => setDestinationSearch(value)}
+                          className="w-full"
+                          placeholder="Enter destination address"
+                          size="large"
+                          style={{ height: '45px' }}
+                          notFoundContent={loadingDestination ? 'Searching...' : null}
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {destinationSearch && (
+                            <button
+                              onClick={clearDestinationLocation}
+                              className="text-white hover:text-[#FF6C2D] transition-colors"
+                              title="Clear destination"
+                            >
+                              <FaTimes className="text-lg" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="mt-1 text-right">
+                        <button
+                          type="button"
+                          onClick={toggleBackToZonalOffices}
+                          className="text-[#FF6C2D] hover:text-[#E55B1F] text-sm font-medium flex items-center gap-1 ml-auto"
+                        >
+                          ← Back to zonal offices
+                        </button>
+                      </div>
+                    </>
                   )}
+                  
                   <p className="text-gray-300 text-xs mt-1">
-                    Choose from available LASTMA zonal offices
+                    {showManualDestination 
+                      ? 'Enter any destination address'
+                      : 'Choose from available LASTMA zonal offices'}
                   </p>
                 </div>
                 
@@ -365,10 +495,11 @@ const Landing: React.FC = () => {
                     type="primary"
                     onClick={handleProceed}
                     disabled={!destinationSearch.trim()}
+                    loading={loadingDestination}
                     className="w-full h-[50px] rounded-sm! bg-[#FF6C2D] text-white font-medium text-lg hover:bg-[#E55B1F] transition border-0 disabled:opacity-50 disabled:cursor-not-allowed"
                     size="large"
                   >
-                    Proceed
+                    {loadingDestination ? 'Fetching coordinates...' : 'Proceed'}
                   </Button>
                 )}
               </>
@@ -429,7 +560,7 @@ const Landing: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-gray-400 text-xs mt-1">
-                    Enter your current address or use your device location
+                    Enter your current address or click the <FaCrosshairs className="inline text-xs" /> icon to use your device location
                   </p>
                 </div>
 
@@ -446,10 +577,15 @@ const Landing: React.FC = () => {
 
                 <Button
                   type="text"
-                  onClick={() => setShowCurrentLocation(false)}
+                  onClick={() => {
+                    setShowCurrentLocation(false);
+                    if (showManualDestination) {
+                      setShowManualDestination(false);
+                    }
+                  }}
                   className="w-full mt-4 text-[#FF6C2D]! hover:text-[#E55B1F]"
                 >
-                  ← Back to select different zonal office
+                  ← Back to select different destination
                 </Button>
               </>
             )}
