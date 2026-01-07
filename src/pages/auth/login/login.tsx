@@ -94,7 +94,7 @@ const Login = () => {
             </div>
             {/* Welcome Text */}
             <div className="mb-8 text-start ">
-                <h2 className="text-2xl font-bold! text-[#475467] mb-1!">Welcome Finidi</h2>
+                <h2 className="text-2xl font-bold! text-[#475467] mb-1!">Welcome Back</h2>
                 <p className="text-sm font-medium text-[#667085]">Kindly input your details to login</p>
             </div>
             <Form
