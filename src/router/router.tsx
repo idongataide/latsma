@@ -113,7 +113,7 @@ export const routes = createBrowserRouter([
     path: "/login",
     element: <OnboardingLayout />,
     children: [
-      { index: true, element: <Landing />},
+      { index: true, element: <Login />},
       { path: "forgot-password", element: <AuthPath /> },
 
     ],
