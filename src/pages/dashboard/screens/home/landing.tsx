@@ -40,7 +40,7 @@ const Landing: React.FC = () => {
   const [gettingCurrentLocation, setGettingCurrentLocation] = useState(false);
   const [showCurrentLocation, setShowCurrentLocation] = useState(false);
   const [showManualDestination, setShowManualDestination] = useState(false);
-  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GMAPS_API_KEY;
 
   // Fetch command centers
   const { data: commandCenters, isLoading: isLoadingCommandCenters } = useCommandCenters();
