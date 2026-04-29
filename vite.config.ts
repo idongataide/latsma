@@ -35,17 +35,17 @@ export default defineConfig(({ mode }) => {
             'Access-Control-Allow-Origin': '*'
           }
         },
-        '/wallet': {
-          target: '⁠https://booking-service.resque.ng',
-          changeOrigin: true,
-          secure: false,
-          rewrite: (path) => path.replace(/^\/wallet/, '/admins')
-        },
+        // '/wallet': {
+        //   target: 'https://booking-service.resque.ng',
+        //   changeOrigin: true,
+        //   secure: false,
+        //   rewrite: (path) => path.replace(/^\/wallet/, '/admins')
+        // },
         '/users': {
-          target: '⁠https://booking-service.resque.ng',
+          target: 'https://booking-service.resque.ng',
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/wallet/, '/admins')
+          rewrite: (path) => path
         }
       }
     },
